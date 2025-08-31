@@ -1,0 +1,32 @@
+* Research topics
+** TODO DHT
+** TODO File store encryption
+** TODO Network encryption
+Rely on SSH for transfer?
+** TODO On-disk data structures
+
+* Scratchpad
+** Services
+*** jbfs-stored
+Manages "blob store" on networked host.
+*** jbfs-cached
+Manages local cache on host where file system is mounted.
+Cache also manages file modifications and committing changes to store.
+*** jbfs-mountd
+Not sure.
+
+** Topology
+Topology for file distribution
+
+site/host/store
+
+Configuration:
+- Redundancy factor
+- Network cost
+
+* Related work
+- https://bazil.org/2014/04/24/introducing-bazil/
+  + https://github.com/bazil/bazil
+- https://perkeep.org/
+- https://github.com/upspin/upspin
+- https://github.com/ipfs

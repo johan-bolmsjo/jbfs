@@ -1,0 +1,36 @@
+#+title: JBFS
+
+JBFS aims to be a simple content addressed distributed file system.
+
+/Disclaimer:/ At present time, this is vapor ware. Development is
+expected to be messy, with experimentation and false starts and possible
+abandonment
+
+The main goal is to have an easy to setup file system for storing
+personal data that is automatically distributed across multiple
+networked hosts with snapshots for preventing accidental data loss.
+
+The plan is for the file system to be essentially immutable, but that
+files that are no longer referenced by the latest version or a snapshot
+can be discarded through garbage collection.
+
+The file system will be implemented in user space, storing its data in
+regular file systems on multiple network nodes. It will be mounted as a
+FUSE file system on Linux hosts.
+
+There have been previous attempts at solving the presented problem. I'm
+not aware of a project having finished software. There are complicated
+real distributed file systems of course. I want something easily
+configured and understood.
+
+Similar projects:
+
+Bazil has very similar design goals.
+
+- https://bazil.org/2014/04/24/introducing-bazil/
+- https://perkeep.org/
+- https://github.com/upspin/upspin
+
+Some similarities:
+
+- https://github.com/ipfs
