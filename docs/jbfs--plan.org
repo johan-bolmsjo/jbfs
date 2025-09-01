@@ -1,5 +1,16 @@
 * Research topics
 ** TODO DHT
+Are DHTs useful for implementing the FS?
+
+DHT algorithms: Kademelia, Chord, Pastry, Tapestry
+
+*** Kademelia
+- Overview :: https://www.kth.se/social/upload/516479a5f276545d6a965080/3-kademlia.pdf
+- Kademlia: A Design Specification :: http://xlattice.sourceforge.net/components/protocol/kademlia/specs.html
+- Kademlia: A Peer-to-peer Information System Based on the XOR Metric :: https://web.archive.org/web/20070228151654/http://www.cs.rice.edu/Conferences/IPTPS02/109.pdf
+- Improving Lookup Performance over a Widely-Deployed DHT :: http://www.barsoom.org/~agthorr/papers/infocom-2006-kad.pdf
+- Sub-Second Lookups on a Large-Scale Kademlia-Based Overlay :: http://people.kth.se/~rauljc/p2p11/jimenez2011subsecond.pdf
+
 ** TODO File store encryption
 ** TODO Network encryption
 Rely on SSH for transfer?
@@ -23,6 +34,11 @@ site/host/store
 Configuration:
 - Redundancy factor
 - Network cost
+
+** 3pp libraries
+*** FUSE
+- https://github.com/hanwen/go-fuse
+- https://github.com/bazil/fuse
 
 * Related work
 - https://bazil.org/2014/04/24/introducing-bazil/
