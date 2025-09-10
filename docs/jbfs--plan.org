@@ -1,20 +1,128 @@
+#+title: JBFS Plan
+#+todo: TODO(t) BLOCKED(b@) | DONE(d@) CANCELED(c@)
+
+* Terminology
+- Replica :: A networked host with storage that syncs the file system DAG and block layers.
+- Block layer :: A sparse file "block layer" that may be backed by another layer. Layers
+  are visited recursively to resolve file system block data on access. Layers are
+  immutable except for when existing as a working copy during file updates (before
+  commiting the update to the DAG).
+- DAG :: Directed Acyclic Graph. Data structure likely to be used to track file updates
+  (file name to content mapping).
+
+
 * Research topics
-** TODO DHT
+** DONE DHTs                                                       :ARCHIVE:
+:LOGBOOK:
+- State "DONE" from "TODO" [2025-09-10 Wed 22:21] \\
+  After reading up some, I'm thinking not. Replicas may be temporarily unavailable due to
+  network and storage failures, but they are expected to be online until taken offline
+  intentionally due to infrastructure changes.
+:END:
+- DHT :: Distributed Hash Table
+
 Are DHTs useful for implementing the FS?
 
 DHT algorithms: Kademelia, Chord, Pastry, Tapestry
 
-*** Kademelia
+*** DHT: Kademelia
 - Overview :: https://www.kth.se/social/upload/516479a5f276545d6a965080/3-kademlia.pdf
 - Kademlia: A Design Specification :: http://xlattice.sourceforge.net/components/protocol/kademlia/specs.html
 - Kademlia: A Peer-to-peer Information System Based on the XOR Metric :: https://web.archive.org/web/20070228151654/http://www.cs.rice.edu/Conferences/IPTPS02/109.pdf
 - Improving Lookup Performance over a Widely-Deployed DHT :: http://www.barsoom.org/~agthorr/papers/infocom-2006-kad.pdf
 - Sub-Second Lookups on a Large-Scale Kademlia-Based Overlay :: http://people.kth.se/~rauljc/p2p11/jimenez2011subsecond.pdf
 
+** TODO CRDTs
+- CRDT :: Conflict-free Replicated Data Type
+
+Can CRDTs (e.g. Merkle-CRDT) be useful for implementing the FS? Most likely as
+IPFS use "Merkle-CRDTs". Similar to Git DAG with automatic merge resolution?
+
+- https://research.protocol.ai/publications/merkle-crdts-merkle-dags-meet-crdts/psaras2020.pdf
+- https://josephg.com/blog/crdts-go-brrr/
+- https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type
+
+I think using some kind of CRDT algorithm for file operations is a likely choice. The
+loose plan right now is that file content will never be automatically merged but that file
+operations such as renames, deletes and updates can be auto-merged by replicas. An
+auto-merged file update would likely just choose what immutable data a file contains in
+some deterministic fashion. Tools should be available to readily retrieve obsoleted file
+content (similar to "git log" and "git show").
+
+*** TODO DAG compaction
+Creating new DAGs with with only snapshots and the latest version.
+Requires replica coordination so that all have the new DAG before abandoning the old one.
+
+*** TODO DAG garbage collection
+Delete unreachable content after DAG compaction.
+
+*** TODO DAG update batching
+Clients batch multiple file updates in single DAG entry (such as in a Git commit).
+
+** TODO Topology
+Topology for file distribution? site/host/store hierarchy?
+
+Configuration:
+- Redundancy factor
+- Network cost
+
+File operations DAG is distributed to all replicas. Content is replicated according to
+configured redundancy factor.
+
+Would be nice to be able to specify the redundancy factor with file path filters. E.g. to
+make important files have a higher replication factor. Research how this can be done.
+Could be part of the DAG data for file operations. In such case, settings could easily be
+updated and observed by all replicas.
+
+*** TODO Replica storage asymmetry
+How (and whom) determines which replicas store which block layers. Replicas could have
+different storage pools and also different network capacity and costs which influence
+replication decisions.
+
+Should replicas pull block layers based on some message bus announcement and replica
+suitability for storing it.
+
+Considerations:
+- A replica may be out of storage and unable to fetch new block layers.
+
+*** TODO Replica block layer index
+How does one replica know what other replicas have a block layer?
+
+Seems like DHT territory, but I don't think I want to use DHTs for the file system.
+
+
+** TODO On-disk data structures
+*** TODO Content updates
+- Copy on write?
+
+- Using a block layer approach to create immuatable layers of content updates? E.g. "B is
+  a block layer based on A", such that a file with content B would resolve blocks in B if
+  present, else in A. Layers are created until it's infeasable due to the number of
+  inderections or it's more advatageous to flatten into a fresh single layer.
+
+  - Drawbacks: Multiple layers, possibly unevenly distributed accross replicas represent a
+    file. This may make file recovery less unintuitive. I.e. a logical file is not always
+    represented by a single physical file.
+
+- Clients manage file updates by using a writable block layer that backs a publised layer.
+  Once committed, file content is immutable and published layers are read only (content
+  addressed).
+
+** TODO Replica reliability
+The file system relies heavily cryptographic hash chains (similar to Git). The design
+should take into consideration that replicas may experiance storage and RAM faults. A
+replica may retrieve corrupted data from its file system or miss-calculate hash values due
+to RAM bit flips.
+
+Loose thought: Replicas validate each other and reports faults to some mediator. E.g.
+"replica A received inconsistent data X from replica B". Such a fault could be due to
+either A or B misbehaving.
+
 ** TODO File store encryption
+
 ** TODO Network encryption
 Rely on SSH for transfer?
-** TODO On-disk data structures
+
 
 * Scratchpad
 ** Services
@@ -26,19 +134,15 @@ Cache also manages file modifications and committing changes to store.
 *** jbfs-mountd
 Not sure.
 
-** Topology
-Topology for file distribution
-
-site/host/store
-
-Configuration:
-- Redundancy factor
-- Network cost
-
 ** 3pp libraries
 *** FUSE
 - https://github.com/hanwen/go-fuse
 - https://github.com/bazil/fuse
+
+*** CRDT
+- https://github.com/ipfs/go-ds-crdt
+- https://github.com/berty/go-ipfs-log
+
 
 * Related work
 - https://bazil.org/2014/04/24/introducing-bazil/
