@@ -90,8 +90,19 @@ How does one replica know what other replicas have a block layer?
 
 Seems like DHT territory, but I don't think I want to use DHTs for the file system.
 
-
 ** TODO On-disk data structures
+*** TODO Block redundancy
+Use Reed-Solomon coding. Split data into M blocks with N blocks of
+additional parity data. Any M number of blocks out of M+N needed to
+restore data.
+
+*** TODO Write coalescing
+LSM tree for write coalescing before creating immutable layer. Reduce random I/O to disk.
+
+See LSM paper from 1996: "The Log-Structured Merge-Tree (LSM-Tree)".
+
+Also topic "write ahead logging" (WAL).
+
 *** TODO Content updates
 - Copy on write?
 
@@ -118,11 +129,33 @@ Loose thought: Replicas validate each other and reports faults to some mediator.
 "replica A received inconsistent data X from replica B". Such a fault could be due to
 either A or B misbehaving.
 
+** TODO File system mounting
+The first obvious choice was to use FUSE for mounting the file systems.
+However, exposing an 9p or NFS network file system service is also an
+option and may even be better for portability. It may be possible to
+mount the file system on Windows without an alternative implementation.
+
+There doesn't seem to be any really battle proven 9p implementation in
+Go though.
+
+Relevant papers:
+- Security in Plan 9 :: https://9p.io/sys/doc/auth.pdf
+
+Specification:
+
+To some extent, the original Plan 9 code is the specification. There
+does not seem to be an authoritative "proper" specification. Note that
+there are at least three versions of the protocol. The original, the
+2000 one and the 2000 one with Linux extensions for better
+interoperability with Linux.
+
+- https://github.com/chaos/diod/blob/master/protocol.md
+
 ** TODO File store encryption
+- Candidate algorithm: ChaCha20-Poly1305
 
 ** TODO Network encryption
 Rely on SSH for transfer?
-
 
 * Scratchpad
 ** Services
@@ -143,6 +176,22 @@ Not sure.
 - https://github.com/ipfs/go-ds-crdt
 - https://github.com/berty/go-ipfs-log
 
+*** Reed-Solomon
+Reed-Solomon erasure coding for block redundancy.
+- https://github.com/klauspost/reedsolomon
+
+*** B+tree
+- https://pkg.go.dev/modernc.org/b?utm_source=godoc
+
+*** KV database
+- https://github.com/hypermodeinc/badger
+
+*** 9p server
+None of the following are really battle proven (i.e. widely used).
+
+- https://github.com/docker-archive/go-p9p
+- https://github.com/knusbaum/go9p
+- https://github.com/Harvey-OS/ninep
 
 * Related work
 - https://bazil.org/2014/04/24/introducing-bazil/
